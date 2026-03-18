@@ -20,11 +20,11 @@ contract PredictionMarketFactory is Ownable {
     
     function createMarket(
         string memory _question,
-        uint256 _durationInMinutes  // CHANGED from days to minutes
+        uint256 _durationInMinutes
     ) external returns (address) {
         require(_durationInMinutes > 0 && _durationInMinutes <= 525600, "Invalid duration"); // max 1 year
         
-        uint256 endTime = block.timestamp + (_durationInMinutes * 1 minutes); // CHANGED
+        uint256 endTime = block.timestamp + (_durationInMinutes * 1 minutes);
         
         PredictionMarket newMarket = new PredictionMarket(
             msg.sender,

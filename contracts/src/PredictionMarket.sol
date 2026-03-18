@@ -14,6 +14,7 @@ contract PredictionMarket is Ownable, ReentrancyGuard {
     enum Outcome { NONE, YES, NO }
     Outcome public result;
     bool public isSettled;
+    bool public feesWithdrawn;
     
     mapping(address => uint256) public yesBets;
     mapping(address => uint256) public noBets;
@@ -38,7 +39,8 @@ contract PredictionMarket is Ownable, ReentrancyGuard {
     error NotAWinner();
     error TransferFailed();
     error MarketNotSettled();
-    error NoFeesToWithdraw();
+    error FeesAlreadyWithdrawn();
+    error NoWinningBets();
     
     constructor(
         address _owner,
@@ -113,6 +115,9 @@ contract PredictionMarket is Ownable, ReentrancyGuard {
         
         if (userBet == 0) revert NotAWinner();
         
+        // Prevent division by zero - if no one won, only owner can withdraw
+        if (totalWinningBets == 0) revert NoWinningBets();
+        
         uint256 totalPrizePool = totalYesBets + totalNoBets;
         uint256 payout = (userBet * totalPrizePool) / totalWinningBets;
         
@@ -126,15 +131,25 @@ contract PredictionMarket is Ownable, ReentrancyGuard {
     
     function withdrawFees() external onlyOwner nonReentrant {
         if (!isSettled) revert MarketNotSettled();
-        if (totalFees == 0) revert NoFeesToWithdraw();
+        if (feesWithdrawn) revert FeesAlreadyWithdrawn();
         
-        uint256 fees = totalFees;
-        totalFees = 0;
+        feesWithdrawn = true;
         
-        (bool success, ) = payable(owner()).call{value: fees}("");
+        uint256 totalWinningBets = result == Outcome.YES ? totalYesBets : totalNoBets;
+        
+        uint256 amountToWithdraw;
+        if (totalWinningBets == 0) {
+            // No winners - owner gets entire pool!
+            amountToWithdraw = totalYesBets + totalNoBets + totalFees;
+        } else {
+            // Normal case - owner gets just the fees
+            amountToWithdraw = totalFees;
+        }
+        
+        (bool success, ) = payable(owner()).call{value: amountToWithdraw}("");
         if (!success) revert TransferFailed();
         
-        emit FeesWithdrawn(owner(), fees);
+        emit FeesWithdrawn(owner(), amountToWithdraw);
     }
     
     function getMarketInfo() external view returns (
