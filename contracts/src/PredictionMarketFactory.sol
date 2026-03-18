@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract PredictionMarketFactory is Ownable {
     
     address[] public allMarkets;
-    mapping(address => address[]) public userMarkets; // markets created by user
+    mapping(address => address[]) public userMarkets;
     
     event MarketCreated(
         address indexed marketAddress,
@@ -20,15 +20,15 @@ contract PredictionMarketFactory is Ownable {
     
     function createMarket(
         string memory _question,
-        uint256 _durationInDays
+        uint256 _durationInMinutes  // CHANGED from days to minutes
     ) external returns (address) {
-        require(_durationInDays > 0 && _durationInDays <= 365, "Invalid duration");
+        require(_durationInMinutes > 0 && _durationInMinutes <= 525600, "Invalid duration"); // max 1 year
         
-        uint256 endTime = block.timestamp + (_durationInDays * 1 days);
+        uint256 endTime = block.timestamp + (_durationInMinutes * 1 minutes); // CHANGED
         
         PredictionMarket newMarket = new PredictionMarket(
-            msg.sender,  // creator is the owner
-            msg.sender,  // creator is also oracle (can change later)
+            msg.sender,
+            msg.sender,
             _question,
             endTime
         );

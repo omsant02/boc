@@ -23,7 +23,7 @@ contract DeployScript is Script {
         // Create first market
         address firstMarket = factory.createMarket(
             "Will Dhurandhar 2 hit Rs.100cr Day 1?",
-            7 // 7 days
+            1 // 1 min
         );
         console.log("First market created at:", firstMarket);
         
