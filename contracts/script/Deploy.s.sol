@@ -7,7 +7,8 @@ import "../src/PredictionMarket.sol";
 
 contract DeployScript is Script {
     function run() external {
-        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        // Use the private key passed via command line, not from .env
+        uint256 deployerPrivateKey = vm.envOr("DEPLOYER_KEY", uint256(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80));
         address deployer = vm.addr(deployerPrivateKey);
         
         console.log("Deploying with address:", deployer);
@@ -19,7 +20,7 @@ contract DeployScript is Script {
         PredictionMarketFactory factory = new PredictionMarketFactory(deployer);
         console.log("\nFactory deployed at:", address(factory));
         
-        // Optionally create a test market
+        // Create first market
         address firstMarket = factory.createMarket(
             "Will Dhurandhar 2 hit Rs.100cr Day 1?",
             7 // 7 days
